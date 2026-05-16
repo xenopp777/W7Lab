@@ -1,3 +1,5 @@
+// Edited by Zoie D 5/13/26
+
 /**
  * @file canvasModel.js
  * Plain data model holding all settings needed to render the canvas.
@@ -5,7 +7,7 @@
 
 import * as lenaJS from 'lena.js';
 
-const STORAGE_KEY = 'profmaker-model';
+const STORAGE_KEY = 'profilemaker-model';
 /**
  * Stores the current state of the canvas rendering parameters and draws itself.
  */
@@ -17,6 +19,14 @@ export default class CanvasModel {
         this.topText = '';
         /** @type {string} */
         this.bottomText = '';
+        /** @type {string} */
+        this.textColor = '#ffffff';
+        /** @type {string} */
+        this.fontSelect = 'sans-serif';
+        /** @type {number} */
+        this.fontSize = 42;
+        /** @type {string} */
+        this.textOutline = '#000000';
         /** @type {string} */
         this.filter = 'none';
         /** -- @type {string} for background */
@@ -45,7 +55,7 @@ export default class CanvasModel {
      * @param {HTMLCanvasElement} canvasElement
      */
     render(canvasElement) {
-        const ctx = canvasElement.getContext('2d');
+        const ctx = canvasElement.getContext('2d', { willReadFrequently: true });
         const { width, height } = canvasElement;
 
         // background
@@ -62,24 +72,41 @@ export default class CanvasModel {
         ctx.translate(-width / 2, -height / 2);
         ctx.drawImage(this.image, 0, 0, width, height);
         ctx.restore();
-
-        // draws a rectangular profile frame with rounded corners
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // draws a rectangular image with rounded corners
+        ctx.save();
+        ctx.clearRect(0, 0, canvasElement.width, canvasElement.height);
         ctx.beginPath();
         ctx.moveTo(0, 8);
         ctx.arcTo(0, 350, 8, 350, 8);
         ctx.arcTo(500, 350, 500, 342, 8);
         ctx.arcTo(500, 0, 492, 0, 8);
         ctx.arcTo(0, 0, 0, 8, 8);
+        ctx.closePath();
         ctx.clip();
         ctx.drawImage(this.image, 0, 0, 500, 350);
 
+        // filter func from MemeMaker example
         if (this.filter !== 'none') {
             const imageData = ctx.getImageData(0, 0, width, height);
             ctx.putImageData(lenaJS[this.filter](imageData), 0, 0);
         }
 
         this.#drawText(ctx, canvasElement);
+        
+        // redraws the same image path to create a border around the image
+        ctx.restore();
+        ctx.beginPath();
+        ctx.moveTo(0, 8);
+        ctx.arcTo(0, 350, 8, 350, 8);
+        ctx.arcTo(500, 350, 500, 342, 8);
+        ctx.arcTo(500, 0, 492, 0, 8);
+        ctx.arcTo(0, 0, 0, 8, 8);
+        ctx.closePath();
+        ctx.clip();
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 10;
+        ctx.stroke();
     }
 
     /**
@@ -89,11 +116,11 @@ export default class CanvasModel {
      */
     #drawText(ctx, canvasElement) {
         const fontSize = Math.floor(canvasElement.width / 10);
-        ctx.font = `bold ${fontSize}px Impact, sans-serif`;
+        ctx.font = `bold ${this.fontSize}px ${this.fontSelect}`;
         ctx.textAlign = 'center';
-        ctx.fillStyle = 'white';
-        ctx.strokeStyle = 'black';
-        ctx.lineWidth = fontSize / 10;
+        ctx.fillStyle = `${this.textColor}`;
+        ctx.strokeStyle = `${this.textOutline}`;
+        ctx.lineWidth = fontSize / 24;
 
         if (this.topText) {
             ctx.fillText(this.topText, canvasElement.width / 2, fontSize);

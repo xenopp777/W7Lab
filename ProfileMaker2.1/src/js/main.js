@@ -1,3 +1,6 @@
+// Edited by Zoie D 5/13/26
+// freestyle drawing not yet added :(
+
 /**
  * @file main.js
  * Application entry point.

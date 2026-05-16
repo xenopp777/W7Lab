@@ -1,3 +1,5 @@
+// Edited by Zoie D 5/13/26
+
 /**
  * @file profileUiController.js
  * Handles all DOM interaction: element references, event listener registration,
@@ -43,6 +45,30 @@ function handleBottomTextChange(event) {
     canvasModel.storeInLocalStorage();
 }
 
+function handleTextColorChange(event) {
+    canvasModel.textColor = event.target.value;
+    canvasModel.render(canvasElement);
+    canvasModel.storeInLocalStorage();
+}
+
+function handleFontFamilyChange(event) {
+    canvasModel.fontSelect = event.target.value;
+    canvasModel.render(canvasElement);
+    canvasModel.storeInLocalStorage();
+}
+
+function handleFontSizeChange(event) {
+    canvasModel.fontSize = event.target.value;
+    canvasModel.render(canvasElement);
+    canvasModel.storeInLocalStorage();
+}
+
+function handleTextOutlineChange(event) {
+    canvasModel.textOutline = event.target.value;
+    canvasModel.render(canvasElement);
+    canvasModel.storeInLocalStorage();
+}
+
 function handleFilterChange(event) {
     canvasModel.filter = event.target.value;
     canvasModel.render(canvasElement);
@@ -67,6 +93,10 @@ function setupEventListeners() {
     document.getElementById('image').addEventListener('change', handleImageChange);
     document.getElementById('topText').addEventListener('input', handleTopTextChange);
     document.getElementById('bottomText').addEventListener('input', handleBottomTextChange);
+    document.getElementById('textColor').addEventListener('input', handleTextColorChange);
+    document.getElementById('fontSelect').addEventListener('change', handleFontFamilyChange);
+    document.getElementById('fontSize').addEventListener('input', handleFontSizeChange);
+    document.getElementById('textOutline').addEventListener('input', handleTextOutlineChange);
     document.getElementById('filterSelect').addEventListener('change', handleFilterChange);
     document.getElementById('downloadPic').addEventListener('click', handleDownloadClick);
 }
@@ -87,7 +117,7 @@ function setImageElement(url) {
 
 /** Sizes the canvas to fit the viewport (capped at 500px). */
 function sizeCanvas() {
-    canvasElement.height = Math.min(500, window.innerWidth - 30);
+    canvasElement.height = Math.min(350, window.innerWidth - 30);
     canvasElement.width = Math.min(500, window.innerWidth - 30);
 }
 
@@ -96,7 +126,7 @@ function sizeCanvas() {
  * and renders the default image so the canvas is never empty.
  */
 export function init() {
-    const DEFAULT_IMAGE_FILE = "./images/defaultProfileImage.jpeg";
+    const DEFAULT_IMAGE_FILE = "./images/meow.png";
 
     setupEventListeners();
     sizeCanvas();
@@ -104,9 +134,19 @@ export function init() {
     const saved = CanvasModel.loadLocalStorage();
     if (saved?.imageUrl) {
         Object.assign(canvasModel, saved);
+        document.getElementById('topText').value = saved.topText;
+        document.getElementById('bottomText').value = saved.bottomText;
+        document.getElementById('textColor').value = saved.textColor;
+        document.getElementById('fontSelect').value = saved.fontSelect;
+        document.getElementById('fontSize').value = saved.fontSize;
+        document.getElementById('textOutline').value = saved.textOutline;
         document.getElementById('filterSelect').value = saved.filter;
         setImageElement(saved.imageUrl);
     } else {
+        canvasModel.textColor = document.getElementById('textColor').value;
+        canvasModel.fontSelect = document.getElementById('fontSelect').value;
+        canvasModel.fontSize = parseFloat(document.getElementById('fontSize').value);
+        canvasModel.textOutline = document.getElementById('textOutline').value;
         canvasModel.filter = document.getElementById('filterSelect').value;
     setImageElement(DEFAULT_IMAGE_FILE);
     }

@@ -4,11 +4,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Profile Maker Starter</title>
+  <title>Profile Maker</title>
   <!-- Google Fonts for the Font Picker -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Dancing+Script:wght@700&family=Oswald:wght@700&family=Roboto:wght@900&display=swap" rel="stylesheet">
+  <!-- Edited by Zoie D 5/13/26 -->
 </head>
 
 <body>
@@ -86,11 +87,8 @@
 
         <div class="mb-3 w-75">
           <label for="textOutline" class="form-label">Text Outline:</label>
-          <select id="textOutline" class="form-select">
-            <option value="none">None</option>
-            <option value="black">Black</option>
-            <option value="white">White</option>
-          </select>
+          <!-- changed input type to match text color input bcuz i felt like it -->
+          <input type="color" id="textOutline" class="form-control form-control-color w-100" value="#000000" title="Choose your text outline color">
         </div>
 
         <div class="mb-3 w-75">
