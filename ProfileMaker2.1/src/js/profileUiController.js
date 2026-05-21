@@ -1,4 +1,4 @@
-// Edited by Zoie D 5/13/26
+// Edited by Zoie D 5/13/26 w/ help from copilot
 
 /**
  * @file profileUiController.js
@@ -17,6 +17,38 @@ export const canvasModel = new CanvasModel();
 // ==========================================
 // EVENT HANDLERS
 // ==========================================
+
+// event handlers for freehand drawing
+let currentPath = null;
+
+canvasElement.addEventListener('mousedown', (event) => {
+    if (!canvasModel.modeDraw || event.button !== 0) return;
+
+    currentPath = {
+        color: canvasModel.penColor,
+        size: canvasModel.penSize,
+        pts: [{ x: event.offsetX, y: event.offsetY }]
+    };
+    canvasModel.paths.push(currentPath);
+    canvasModel.render(canvasElement);
+    canvasModel.storeInLocalStorage();
+});
+
+canvasElement.addEventListener('mousemove', (event) => {
+    if (!canvasModel.modeDraw || !currentPath) return;
+
+    currentPath.pts.push({ x: event.offsetX, y: event.offsetY });
+    canvasModel.render(canvasElement);
+    canvasModel.storeInLocalStorage();
+});
+
+canvasElement.addEventListener('mouseup', () => {
+    currentPath = null;
+});
+
+canvasElement.addEventListener('mouseleave', () => {
+    currentPath = null;
+});
 
 /**
  * Reads the picked file as a base64 data URL so the image source is
@@ -74,6 +106,30 @@ function handleFilterChange(event) {
     canvasModel.render(canvasElement);
     canvasModel.storeInLocalStorage();
 }
+// --
+function handleModeChange(event) {
+    canvasModel.modeDraw = (event.target.value === 'draw');
+    canvasModel.render(canvasElement);
+    canvasModel.storeInLocalStorage();
+}
+
+function handlePenColorChange(event) {
+    canvasModel.penColor = event.target.value;
+    canvasModel.render(canvasElement);
+    canvasModel.storeInLocalStorage();
+}
+
+function handlePenSizeChange(event) {
+    canvasModel.penSize = Number(event.target.value);
+    canvasModel.render(canvasElement);
+    canvasModel.storeInLocalStorage();
+}
+
+function handleClearDrawing() {
+    canvasModel.paths = [];
+    canvasModel.render(canvasElement);
+    canvasModel.storeInLocalStorage();
+}
 
 /**
  * Refreshes the anchor's href with a PNG of the current canvas just before the
@@ -98,6 +154,12 @@ function setupEventListeners() {
     document.getElementById('fontSize').addEventListener('input', handleFontSizeChange);
     document.getElementById('textOutline').addEventListener('input', handleTextOutlineChange);
     document.getElementById('filterSelect').addEventListener('change', handleFilterChange);
+    document.querySelectorAll('input[name="editMode"]').forEach((input) => {
+        input.addEventListener('change', handleModeChange);
+    });
+    document.getElementById('penColor').addEventListener('input', handlePenColorChange);
+    document.getElementById('penSize').addEventListener('input', handlePenSizeChange);
+    document.getElementById('clearDrawing').addEventListener('click', handleClearDrawing);
     document.getElementById('downloadPic').addEventListener('click', handleDownloadClick);
 }
 
@@ -141,6 +203,9 @@ export function init() {
         document.getElementById('fontSize').value = saved.fontSize;
         document.getElementById('textOutline').value = saved.textOutline;
         document.getElementById('filterSelect').value = saved.filter;
+        document.getElementById('modeDraw').checked = Boolean(saved.modeDraw);
+        document.getElementById('modePan').checked = !saved.modeDraw;
+        document.getElementById('penColor').value = saved.penColor;
         setImageElement(saved.imageUrl);
     } else {
         canvasModel.textColor = document.getElementById('textColor').value;
@@ -148,6 +213,8 @@ export function init() {
         canvasModel.fontSize = parseFloat(document.getElementById('fontSize').value);
         canvasModel.textOutline = document.getElementById('textOutline').value;
         canvasModel.filter = document.getElementById('filterSelect').value;
-    setImageElement(DEFAULT_IMAGE_FILE);
+        canvasModel.modeDraw = document.getElementById('modeDraw').checked;
+        canvasModel.penColor = document.getElementById('penColor').value;
+        setImageElement(DEFAULT_IMAGE_FILE);
     }
 }

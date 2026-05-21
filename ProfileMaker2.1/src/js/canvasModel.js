@@ -1,4 +1,4 @@
-// Edited by Zoie D 5/13/26
+// Edited by Zoie D 5/13/26 w/ help from copilot
 
 /**
  * @file canvasModel.js
@@ -29,8 +29,24 @@ export default class CanvasModel {
         this.textOutline = '#000000';
         /** @type {string} */
         this.filter = 'none';
-        /** -- @type {string} for background */
+        /** @type {string} */
         this.bgColor = '#ffffff';
+        /** @type {boolean} edit mode */ 
+        this.modePan = true;
+        /** @type {boolean} draw mode */
+        this.modeDraw = false;
+        /** @type {array} drawing paths recorded for localStorage */
+        this.paths = [];
+        /** @type {string} freehand pen color*/
+        this.penColor = '#ff0000';
+        /** @type {number} freehand pen size */
+        this.penSize = 5;
+        /** @type {string} */
+        this.imageUrl = '';
+        /** @type {number} */
+        this.rotate = 0;
+        /** @type {number} */
+        this.scale = 1;
     }
 
     // localStorage functions from MemeMaker example
@@ -58,55 +74,72 @@ export default class CanvasModel {
         const ctx = canvasElement.getContext('2d', { willReadFrequently: true });
         const { width, height } = canvasElement;
 
-        // background
+        ctx.clearRect(0, 0, width, height);
         ctx.fillStyle = this.bgColor;
         ctx.fillRect(0, 0, width, height);
 
-        // drawing func from MemeMaker example
-        // scales and rotates around a center so img stays
-        // anchored to the middle
-        ctx.save();
-        ctx.translate(width / 2, height / 2);
-        ctx.rotate(this.rotate * Math.PI / 180);
-        ctx.scale(this.scale, this.scale);
-        ctx.translate(-width / 2, -height / 2);
-        ctx.drawImage(this.image, 0, 0, width, height);
-        ctx.restore();
-        
-        // draws a rectangular image with rounded corners
-        ctx.save();
-        ctx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-        ctx.beginPath();
-        ctx.moveTo(0, 8);
-        ctx.arcTo(0, 350, 8, 350, 8);
-        ctx.arcTo(500, 350, 500, 342, 8);
-        ctx.arcTo(500, 0, 492, 0, 8);
-        ctx.arcTo(0, 0, 0, 8, 8);
-        ctx.closePath();
-        ctx.clip();
-        ctx.drawImage(this.image, 0, 0, 500, 350);
+        if (this.image) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(0, 8);
+            ctx.arcTo(0, height, 8, height, 8);
+            ctx.arcTo(width, height, width, height - 8, 8);
+            ctx.arcTo(width, 0, width - 8, 0, 8);
+            ctx.arcTo(0, 0, 0, 8, 8);
+            ctx.closePath();
+            ctx.clip();
+            ctx.drawImage(this.image, 0, 0, width, height);
 
-        // filter func from MemeMaker example
-        if (this.filter !== 'none') {
-            const imageData = ctx.getImageData(0, 0, width, height);
-            ctx.putImageData(lenaJS[this.filter](imageData), 0, 0);
+            if (this.filter !== 'none') {
+                const imageData = ctx.getImageData(0, 0, width, height);
+                ctx.putImageData(lenaJS[this.filter](imageData), 0, 0);
+            }
+            ctx.restore();
+
+            this.#drawPaths(ctx);
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(0, 8);
+            ctx.arcTo(0, height, 8, height, 8);
+            ctx.arcTo(width, height, width, height - 8, 8);
+            ctx.arcTo(width, 0, width - 8, 0, 8);
+            ctx.arcTo(0, 0, 0, 8, 8);
+            ctx.closePath();
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 10;
+            ctx.stroke();
+            ctx.restore();
+        } else {
+            this.#drawPaths(ctx);
         }
 
         this.#drawText(ctx, canvasElement);
-        
-        // redraws the same image path to create a border around the image
-        ctx.restore();
-        ctx.beginPath();
-        ctx.moveTo(0, 8);
-        ctx.arcTo(0, 350, 8, 350, 8);
-        ctx.arcTo(500, 350, 500, 342, 8);
-        ctx.arcTo(500, 0, 492, 0, 8);
-        ctx.arcTo(0, 0, 0, 8, 8);
-        ctx.closePath();
-        ctx.clip();
-        ctx.strokeStyle = 'white';
-        ctx.lineWidth = 10;
-        ctx.stroke();
+    }
+
+    #drawPaths(ctx) {
+        if (!Array.isArray(this.paths)) {
+            return;
+        }
+
+        for (const path of this.paths) {
+            if (!path?.pts?.length) continue;
+
+            ctx.save();
+            ctx.strokeStyle = path.color || '#ff0000';
+            ctx.lineWidth = path.size || 5;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(path.pts[0].x, path.pts[0].y);
+
+            for (let i = 1; i < path.pts.length; i += 1) {
+                ctx.lineTo(path.pts[i].x, path.pts[i].y);
+            }
+
+            ctx.stroke();
+            ctx.restore();
+        }
     }
 
     /**
